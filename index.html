@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>결측값 처리 방법</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+    background: #F8F7F4;
+    color: #1a1a1a;
+    padding: 32px 16px 48px;
+  }
+  .container { max-width: 860px; margin: 0 auto; }
+
+  .inf-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 28px;
+  }
+
+  /* Section headers */
+  .sec-head {
+    border-radius: 10px;
+    padding: 11px 0;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .sec-coral  { background: #FAECE7; color: #993C1D; border: 1px solid #F0997B; }
+  .sec-blue   { background: #E6F1FB; color: #185FA5; border: 1px solid #85B7EB; }
+  .sec-teal   { background: #E1F5EE; color: #0F6E56; border: 1px solid #5DCAA5; }
+  .sec-purple { background: #EEEDFE; color: #534AB7; border: 1px solid #AFA9EC; }
+  .sec-amber  { background: #FAEEDA; color: #854F0B; border: 1px solid #EF9F27; }
+
+  /* Top 3-col grid */
+  .top-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .col-cards { display: flex; flex-direction: column; gap: 8px; }
+
+  /* Cards */
+  .card {
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid #E0DED6;
+    background: #fff;
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; text-align: center; }
+  .card-sub   { font-size: 12px; color: #666; text-align: center; line-height: 1.6; }
+
+  /* Model section */
+  .model-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  /* MICE clickable card */
+  .mice-card {
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 2px solid #AFA9EC;
+    background: #EEEDFE;
+    cursor: pointer;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .mice-card:hover { border-color: #534AB7; box-shadow: 0 0 0 3px rgba(83,74,183,.12); }
+  .mice-card.open  { border-color: #534AB7; }
+  .mice-card-title { font-size: 14px; font-weight: 600; color: #3C3489; text-align: center; margin-bottom: 4px; }
+  .mice-card-sub   { font-size: 12px; color: #534AB7; text-align: center; line-height: 1.6; }
+  .mice-badge {
+    display: inline-block;
+    background: #534AB7;
+    color: #fff;
+    font-size: 11px;
+    border-radius: 12px;
+    padding: 2px 10px;
+    margin-top: 6px;
+  }
+
+  /* MICE stepper panel */
+  .mice-panel {
+    display: none;
+    margin-top: 12px;
+    border: 1px solid #AFA9EC;
+    border-radius: 12px;
+    padding: 18px 20px;
+    background: #fff;
+  }
+  .mice-panel.open { display: block; }
+
+  .step-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #D3D1C7; transition: background .25s; }
+  .dot.active { background: #534AB7; }
+
+  .sp-label { font-size: 10px; font-weight: 600; color: #534AB7; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
+  .sp-title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 5px; }
+  .sp-desc  { font-size: 13px; color: #555; line-height: 1.65; margin-bottom: 12px; }
+  .sp { display: none; }
+  .sp.show { display: block; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-bottom: 8px; }
+  th { background: #EEEDFE; color: #3C3489; font-weight: 600; padding: 7px 10px; text-align: center; border: 1px solid #AFA9EC; }
+  td { padding: 7px 10px; text-align: center; border: 1px solid #E0DED6; color: #1a1a1a; }
+  tr:nth-child(even) td { background: #F8F7F4; }
+  .miss   { color: #D85A30; font-weight: 600; }
+  .filled { background: #E1F5EE !important; color: #085041; font-weight: 600; }
+  .target { background: #FAEEDA !important; color: #633806; font-weight: 600; }
+  .used   { background: #EEEDFE !important; color: #3C3489; }
+
+  .avg-row { display: flex; gap: 8px; justify-content: center; margin: 8px 0; flex-wrap: wrap; }
+  .avg-pill {
+    background: #EEEDFE; border: 1px solid #7F77DD;
+    border-radius: 20px; padding: 3px 12px;
+    font-size: 12px; color: #3C3489; font-weight: 500;
+  }
+
+  .conv-row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .conv-box {
+    border-radius: 8px; padding: 8px 16px;
+    font-size: 13px; font-weight: 600; text-align: center;
+    border: 1px solid #AFA9EC; background: #EEEDFE; color: #3C3489;
+    line-height: 1.5;
+  }
+  .conv-arr { color: #7F77DD; font-size: 18px; }
+  .conv-final { background: #E1F5EE; border-color: #5DCAA5; color: #085041; }
+
+  .pro-con { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .pro { background: #E1F5EE; border-radius: 8px; padding: 10px 12px; border: 1px solid #9FE1CB; }
+  .con { background: #FAECE7; border-radius: 8px; padding: 10px 12px; border: 1px solid #F5C4B3; }
+  .pc-title { font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+  .pro .pc-title { color: #085041; }
+  .con .pc-title { color: #712B13; }
+  .pc-item { font-size: 12px; color: #555; line-height: 1.7; }
+
+  .sp-nav { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+  .sp-btn {
+    font-size: 13px; padding: 6px 16px; border-radius: 8px;
+    border: 1px solid #D3D1C7; background: #F8F7F4;
+    color: #1a1a1a; cursor: pointer;
+  }
+  .sp-btn.pri { background: #534AB7; border-color: #534AB7; color: #fff; }
+  .sp-btn:hover { opacity: .85; }
+
+  /* Rainfall */
+  .rain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  /* Bottom bar */
+  .bot-wrap { margin-top: 24px; }
+  .bar-row { display: flex; align-items: center; gap: 12px; }
+  .bar-label { font-size: 12px; color: #888; white-space: nowrap; }
+  .bar-outer { flex: 1; }
+  .bar-track {
+    height: 5px; background: #E0DED6; border-radius: 3px;
+    position: relative; margin-bottom: 8px;
+  }
+  .bar-fill {
+    position: absolute; left: 0; top: 0; height: 100%;
+    background: linear-gradient(to right, #B4B2A9, #534AB7);
+    border-radius: 3px; width: 100%;
+  }
+  .bar-dots-row { display: flex; justify-content: space-between; margin-top: -14px; }
+  .bar-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid #fff; }
+  .bar-names { display: flex; justify-content: space-between; margin-top: 6px; }
+  .bar-name { font-size: 11px; color: #888; text-align: center; flex: 1; }
+
+  /* divider */
+  .divider { height: 1px; background: #E0DED6; margin: 20px 0; }
+
+  @media (max-width: 600px) {
+    .top-grid, .model-grid, .rain-grid { grid-template-columns: 1fr; }
+    .pro-con { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="inf-title">결측값 처리 방법</div>
+
+  <!-- Top 3 columns -->
+  <div class="top-grid">
+    <!-- 제거 -->
+    <div>
+      <div class="sec-head sec-coral">① 제거</div>
+      <div class="col-cards">
+        <div class="card">
+          <div class="card-title">행 삭제</div>
+          <div class="card-sub">dropna()<br>결측 행 제거</div>
+        </div>
+        <div class="card">
+          <div class="card-title">열 삭제</div>
+          <div class="card-sub">결측 비율<br>높은 열 제거</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 단순 대체 -->
+    <div>
+      <div class="sec-head sec-blue">② 단순 대체</div>
+      <div class="col-cards">
+        <div class="card">
+          <div class="card-title">고정값</div>
+          <div class="card-sub">0 또는<br>지정값 대입</div>
+        </div>
+        <div class="card">
+          <div class="card-title">통계값</div>
+          <div class="card-sub">평균 / 중앙값<br>최빈값 대입</div>
+        </div>
+        <div class="card">
+          <div class="card-title">ffill</div>
+          <div class="card-sub">앞값으로 채움<br>→ 시계열 유용</div>
+        </div>
+        <div class="card">
+          <div class="card-title">bfill</div>
+          <div class="card-sub">뒷값으로 채움<br>→ 시계열 유용</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 보간 -->
+    <div>
+      <div class="sec-head sec-teal">③ 보간</div>
+      <div class="col-cards">
+        <div class="card">
+          <div class="card-title">선형</div>
+          <div class="card-sub">두 점 사이<br>직선 추정</div>
+        </div>
+        <div class="card">
+          <div class="card-title">스플라인</div>
+          <div class="card-sub">곡선 기반<br>부드러운 추정</div>
+        </div>
+        <div class="card">
+          <div class="card-title">시간 기반</div>
+          <div class="card-sub">시간 간격을 고려한<br>보간 (시계열 전용)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 모델 기반 -->
+  <div class="sec-head sec-purple">④ 모델 기반 예측</div>
+  <div class="model-grid">
+    <div class="card">
+      <div class="card-title">KNN</div>
+      <div class="card-sub">유사한 이웃 k개로<br>결측값 추정</div>
+    </div>
+
+    <div class="mice-card" id="mice-card" onclick="toggleMice()">
+      <div class="mice-card-title">MICE</div>
+      <div class="mice-card-sub">다중 회귀 반복으로<br>정교하게 추정</div>
+      <div style="text-align:center"><span class="mice-badge" id="mice-badge">▶ 단계별 보기</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">머신러닝</div>
+      <div class="card-sub">Random Forest 등<br>복잡한 패턴 학습</div>
+    </div>
+  </div>
+
+  <!-- MICE stepper panel -->
+  <div class="mice-panel" id="mice-panel">
+    <div class="step-dots" id="sdots"></div>
+
+    <div class="sp show" id="sp0">
+      <div class="sp-label">개요</div>
+      <div class="sp-title">MICE란?</div>
+      <div class="sp-desc">결측 열을 하나씩 돌아가며 회귀 모델로 채우고, 이 과정을 반복해 점점 정확한 값으로 수렴시키는 방법입니다.<br>아래 예시 데이터로 단계별로 살펴봅니다.</div>
+      <table>
+        <tr><th>관측</th><th>기온 (°C)</th><th>습도 (%)</th><th>강수량 (mm)</th></tr>
+        <tr><td>1</td><td>25</td><td>60</td><td>3.2</td></tr>
+        <tr><td>2</td><td>28</td><td class="miss">?</td><td>0.0</td></tr>
+        <tr><td>3</td><td class="miss">?</td><td>75</td><td>8.5</td></tr>
+        <tr><td>4</td><td>22</td><td>55</td><td class="miss">?</td></tr>
+        <tr><td>5</td><td>30</td><td>80</td><td>1.1</td></tr>
+      </table>
+    </div>
+
+    <div class="sp" id="sp1">
+      <div class="sp-label">1단계</div>
+      <div class="sp-title">일단 평균으로 임시 채우기</div>
+      <div class="sp-desc">회귀를 돌리려면 완전한 데이터가 필요합니다. 각 열의 평균으로 결측을 먼저 임시 대체합니다.</div>
+      <div class="avg-row">
+        <div class="avg-pill">기온 평균 26.25°C</div>
+        <div class="avg-pill">습도 평균 67.5%</div>
+        <div class="avg-pill">강수량 평균 3.2mm</div>
+      </div>
+      <table>
+        <tr><th>관측</th><th>기온 (°C)</th><th>습도 (%)</th><th>강수량 (mm)</th></tr>
+        <tr><td>1</td><td>25</td><td>60</td><td>3.2</td></tr>
+        <tr><td>2</td><td>28</td><td class="filled">67.5</td><td>0.0</td></tr>
+        <tr><td>3</td><td class="filled">26.25</td><td>75</td><td>8.5</td></tr>
+        <tr><td>4</td><td>22</td><td>55</td><td class="filled">3.2</td></tr>
+        <tr><td>5</td><td>30</td><td>80</td><td>1.1</td></tr>
+      </table>
+    </div>
+
+    <div class="sp" id="sp2">
+      <div class="sp-label">2단계</div>
+      <div class="sp-title">결측 열을 하나씩 회귀로 예측</div>
+      <div class="sp-desc">기온(관측 3)을 종속변수로, 습도·강수량을 설명변수로 회귀 학습 → 예측값 대입.<br>같은 방식으로 습도(관측 2), 강수량(관측 4)도 순서대로 예측 → 1회 반복 완료.</div>
+      <table>
+        <tr><th>관측</th><th>기온 (°C)</th><th>습도 (%)</th><th>강수량 (mm)</th></tr>
+        <tr><td>1</td><td class="used">25</td><td class="used">60</td><td class="used">3.2</td></tr>
+        <tr><td>2</td><td class="used">28</td><td class="used">67.5</td><td class="used">0.0</td></tr>
+        <tr><td style="background:#FAEEDA;color:#633806;font-weight:600">3</td><td class="target">→ 예측</td><td class="used">75</td><td class="used">8.5</td></tr>
+        <tr><td>4</td><td class="used">22</td><td class="used">55</td><td class="used">3.2</td></tr>
+        <tr><td>5</td><td class="used">30</td><td class="used">80</td><td class="used">1.1</td></tr>
+      </table>
+      <div style="font-size:11px;color:#999;margin-top:4px">보라색 = 학습에 사용 / 주황색 = 예측 대상</div>
+    </div>
+
+    <div class="sp" id="sp3">
+      <div class="sp-label">3단계</div>
+      <div class="sp-title">반복할수록 수렴</div>
+      <div class="sp-desc">5~10회 반복 후 값이 거의 바뀌지 않으면 최종값으로 확정합니다.</div>
+      <div class="conv-row">
+        <div class="conv-box">1회차<br><span style="font-size:11px;font-weight:400;color:#534AB7">임시값 기반</span></div>
+        <div class="conv-arr">→</div>
+        <div class="conv-box">2회차<br><span style="font-size:11px;font-weight:400;color:#534AB7">점점 정확</span></div>
+        <div class="conv-arr">→</div>
+        <div class="conv-box">3회차<br><span style="font-size:11px;font-weight:400;color:#534AB7">더 정확</span></div>
+        <div class="conv-arr">→</div>
+        <div class="conv-box conv-final">수렴<br><span style="font-size:11px;font-weight:400;color:#085041">최종값 확정</span></div>
+      </div>
+      <div class="pro-con">
+        <div class="pro">
+          <div class="pc-title">장점</div>
+          <div class="pc-item">변수 간 상관관계 반영<br>단순 평균보다 정교<br>결측 패턴에 유연</div>
+        </div>
+        <div class="con">
+          <div class="pc-title">단점</div>
+          <div class="pc-item">계산 비용 높음<br>결측이 너무 많으면 불안정<br>변수 많을수록 복잡</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sp-nav">
+      <button class="sp-btn" id="sp-prev" onclick="spMove(-1)" style="display:none">이전</button>
+      <button class="sp-btn pri" id="sp-next" onclick="spMove(1)">다음</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 강수량 -->
+  <div class="sec-head sec-amber">강수량 데이터에 권장하는 방법</div>
+  <div class="rain-grid">
+    <div class="card">
+      <div class="card-title">단기 결측</div>
+      <div class="card-sub">선형 / 시간 보간<br>짧은 공백에 적합<br>부드러운 연속성 유지</div>
+    </div>
+    <div class="card">
+      <div class="card-title">장기 결측</div>
+      <div class="card-sub">동기간 과거 평균<br>또는 결측 표시 후<br>분석에서 제외</div>
+    </div>
+    <div class="card">
+      <div class="card-title">코드 결측 (-9.0)</div>
+      <div class="card-sub">도메인 지식 기반<br>판단 필수<br>단순 대체 주의</div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="bot-wrap">
+    <div class="bar-row">
+      <span class="bar-label">빠름·단순</span>
+      <div class="bar-outer">
+        <div class="bar-track"><div class="bar-fill"></div></div>
+        <div class="bar-names">
+          <span class="bar-name">제거</span>
+          <span class="bar-name">단순 대체</span>
+          <span class="bar-name">보간</span>
+          <span class="bar-name">모델 기반</span>
+        </div>
+      </div>
+      <span class="bar-label">정확·복잡</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  let miceOpen = false;
+  let spCur = 0;
+  const spTotal = 4;
+
+  const dotsEl = document.getElementById('sdots');
+  for (let i = 0; i < spTotal; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    dotsEl.appendChild(d);
+  }
+
+  function toggleMice() {
+    miceOpen = !miceOpen;
+    document.getElementById('mice-panel').classList.toggle('open', miceOpen);
+    document.getElementById('mice-card').classList.toggle('open', miceOpen);
+    document.getElementById('mice-badge').textContent = miceOpen ? '▼ 닫기' : '▶ 단계별 보기';
+    if (miceOpen) { spCur = 0; renderSp(); }
+  }
+
+  function renderSp() {
+    for (let i = 0; i < spTotal; i++) {
+      document.getElementById('sp' + i).classList.toggle('show', i === spCur);
+      dotsEl.children[i].classList.toggle('active', i === spCur);
+    }
+    document.getElementById('sp-prev').style.display = spCur === 0 ? 'none' : '';
+    document.getElementById('sp-next').style.display = spCur === spTotal - 1 ? 'none' : '';
+  }
+
+  function spMove(dir) {
+    spCur = Math.max(0, Math.min(spTotal - 1, spCur + dir));
+    renderSp();
+  }
+</script>
+</body>
+</html>
