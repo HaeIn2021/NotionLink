@@ -36,6 +36,11 @@
   .sec-teal   { background: #E1F5EE; color: #0F6E56; border: 1px solid #5DCAA5; }
   .sec-purple { background: #EEEDFE; color: #534AB7; border: 1px solid #AFA9EC; }
   .sec-amber  { background: #FAEEDA; color: #854F0B; border: 1px solid #EF9F27; }
+  .sub-head {
+    font-size: 13px; font-weight: 600; color: #854F0B;
+    margin: 14px 0 8px; padding-left: 4px;
+    border-left: 3px solid #EF9F27;
+  }
 
   /* Top 3-col grid */
   .top-grid {
@@ -181,8 +186,63 @@
   /* divider */
   .divider { height: 1px; background: #E0DED6; margin: 20px 0; }
 
+  .sec-green  { background: #EAF3DE; color: #3B6D11; border: 1px solid #97C459; }
+
+  .neighbor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .neighbor-card {
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid #E0DED6;
+    background: #fff;
+  }
+  .neighbor-card-title { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+  .neighbor-card-sub { font-size: 12px; color: #666; line-height: 1.6; margin-bottom: 8px; }
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .tag-green { background: #EAF3DE; color: #3B6D11; border: 1px solid #97C459; }
+  .tag-blue  { background: #E6F1FB; color: #185FA5; border: 1px solid #85B7EB; }
+  .tag-amber { background: #FAEEDA; color: #854F0B; border: 1px solid #EF9F27; }
+  .tag-coral { background: #FAECE7; color: #993C1D; border: 1px solid #F0997B; }
+
+  .rec-box {
+    background: #EAF3DE;
+    border: 1px solid #97C459;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+  .rec-box-title { font-size: 13px; font-weight: 600; color: #3B6D11; margin-bottom: 8px; }
+  .rec-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 5px; font-size: 12px; color: #27500A; line-height: 1.6; }
+  .rec-num { width: 18px; height: 18px; border-radius: 50%; background: #3B6D11; color: #fff; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+  .kriging-click {
+    display: inline-block; margin: 8px 0 0;
+    background: #185FA5; color: #fff;
+    font-size: 11px; border-radius: 12px; padding: 3px 12px;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .kriging-click:hover { opacity: .85; }
+  .kriging-panel { display: none; margin-top: 12px; }
+  .kriging-panel.open { display: block; }
+  .kriging-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .kriging-step { display: flex; gap: 10px; align-items: flex-start; }
+  .kriging-step-num { width: 22px; height: 22px; border-radius: 50%; background: #185FA5; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .kriging-step-title { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 3px; }
+  .kriging-step-desc { font-size: 12px; color: #555; line-height: 1.65; }
+  .kriging-compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: stretch; margin-top: 4px; }
+  .kriging-vs { border-radius: 8px; padding: 10px 12px; }
+  .kriging-idw { background: #F8F7F4; border: 1px solid #E0DED6; }
+  .kriging-krig { background: #E6F1FB; border: 1px solid #85B7EB; }
+  .kriging-vs-title { font-size: 12px; font-weight: 600; color: #1a1a1a; margin-bottom: 5px; }
+  .kriging-vs-desc { font-size: 11px; color: #555; line-height: 1.7; }
+
   @media (max-width: 600px) {
-    .top-grid, .model-grid, .rain-grid { grid-template-columns: 1fr; }
+    .top-grid, .model-grid, .rain-grid, .neighbor-grid { grid-template-columns: 1fr; }
     .pro-con { grid-template-columns: 1fr; }
   }
 </style>
@@ -359,7 +419,7 @@
   <div class="divider"></div>
 
   <!-- 강수량 -->
-  <div class="sec-head sec-amber">강수량 데이터에 권장하는 방법</div>
+  <div class="sec-head sec-amber">강수량 데이터에서 고려할 수 있는 방법</div>
   <div class="rain-grid">
     <div class="card">
       <div class="card-title">단기 결측</div>
@@ -374,6 +434,121 @@
       <div class="card-sub">도메인 지식 기반<br>판단 필수<br>단순 대체 주의</div>
     </div>
   </div>
+
+  <!-- 인근 관측소 서브섹션 -->
+  <div class="sub-head">인근 관측소 데이터를 활용한 결측 처리</div>
+  <div class="neighbor-grid">
+
+    <div class="neighbor-card">
+      <div class="neighbor-card-title">정상비율법 (Normal Ratio)</div>
+      <div class="neighbor-card-sub">인근 관측소의 장기 평균 비율을 이용해 결측값 추정.<br>기상청 공식 방법으로 빠르고 검증된 기법.</div>
+      <div style="background:#FFF8EE;border-radius:8px;padding:8px 10px;font-size:12px;color:#444;font-family:monospace;margin-bottom:8px">
+        결측값 = (홍천평균 / 인근소평균) × 인근소값
+      </div>
+      <div class="tag-row">
+        <span class="tag tag-green">빠름</span>
+        <span class="tag tag-green">공식 방법</span>
+        <span class="tag tag-amber">장기평균 필요</span>
+      </div>
+    </div>
+
+    <div class="neighbor-card">
+      <div class="neighbor-card-title">역거리 가중법 (IDW)</div>
+      <div class="neighbor-card-sub">가까운 관측소일수록 더 높은 가중치를 부여.<br>여러 관측소가 있을 때 직관적으로 적용 가능.</div>
+      <div style="background:#FFF8EE;border-radius:8px;padding:8px 10px;font-size:12px;color:#444;font-family:monospace;margin-bottom:8px">
+        가중치 = 1 / 거리²
+      </div>
+      <div class="tag-row">
+        <span class="tag tag-green">직관적</span>
+        <span class="tag tag-blue">관측소 3개+</span>
+        <span class="tag tag-amber">거리 정보 필요</span>
+      </div>
+    </div>
+
+    <div class="neighbor-card" style="grid-column: span 2;">
+      <div class="neighbor-card-title">크리깅 (Kriging)</div>
+      <div class="neighbor-card-sub">"가까운 관측소가 더 비슷하다"는 원리를 수학적으로 정교화한 방법.<br>단순 거리 가중치가 아니라, 관측소들 사이의 <b>실제 데이터 패턴</b>을 분석해 가중치를 결정합니다.</div>
+
+      <div class="kriging-click" id="kriging-card" onclick="toggleKriging()">
+        <span id="kriging-badge">▶ 작동 원리 보기</span>
+      </div>
+
+      <div class="kriging-panel" id="kriging-panel">
+        <div class="kriging-steps">
+          <div class="kriging-step">
+            <div class="kriging-step-num">1</div>
+            <div>
+              <div class="kriging-step-title">관측소 간 거리 vs 차이 관계 분석</div>
+              <div class="kriging-step-desc">모든 관측소 쌍을 비교합니다. "춘천-홍천(30km)은 강수량 차이가 작고, 춘천-부산(400km)은 차이가 크다"처럼 <b>거리가 멀수록 값 차이가 커지는 패턴</b>을 먼저 파악합니다.</div>
+            </div>
+          </div>
+          <div class="kriging-step">
+            <div class="kriging-step-num">2</div>
+            <div>
+              <div class="kriging-step-title">베리오그램(Variogram) 생성</div>
+              <div class="kriging-step-desc">1단계에서 파악한 거리-차이 관계를 그래프로 표현한 것이 베리오그램입니다. 이 곡선이 IDW의 단순 1/거리² 대신 <b>실제 데이터에 맞는 가중치 함수</b> 역할을 합니다.</div>
+            </div>
+          </div>
+          <div class="kriging-step">
+            <div class="kriging-step-num">3</div>
+            <div>
+              <div class="kriging-step-title">베리오그램으로 가중치 계산 후 예측</div>
+              <div class="kriging-step-desc">결측 지점에서 각 관측소까지의 거리를 베리오그램에 적용해 가중치를 결정하고 값을 추정합니다. IDW보다 정확한 이유가 바로 이 맞춤형 가중치 때문입니다.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kriging-compare">
+          <div class="kriging-vs kriging-idw">
+            <div class="kriging-vs-title">IDW (역거리 가중법)</div>
+            <div class="kriging-vs-desc">가중치 = 1/거리²<br>항상 동일한 공식 사용<br>→ 데이터 특성 무시</div>
+          </div>
+          <div style="font-size:18px;color:#7F77DD;align-self:center">vs</div>
+          <div class="kriging-vs kriging-krig">
+            <div class="kriging-vs-title">크리깅</div>
+            <div class="kriging-vs-desc">가중치 = 베리오그램(거리)<br>데이터 패턴 분석 후 결정<br>→ 실제 공간 구조 반영</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tag-row" style="margin-top:10px">
+        <span class="tag tag-blue">높은 정확도</span>
+        <span class="tag tag-coral">계산 복잡</span>
+        <span class="tag tag-blue">공간 분석 목적</span>
+      </div>
+    </div>
+
+    <div class="neighbor-card">
+      <div class="neighbor-card-title">머신러닝 (Random Forest 등)</div>
+      <div class="neighbor-card-sub">인근 관측소 값을 설명변수로 넣어 예측.<br>월·시간대·계절 등 추가 변수로 정확도 향상.</div>
+      <div style="background:#FFF8EE;border-radius:8px;padding:8px 10px;font-size:12px;color:#444;font-family:monospace;margin-bottom:8px">
+        X = [춘천강수량, 원주강수량, 월, 시간대]
+      </div>
+      <div class="tag-row">
+        <span class="tag tag-blue">높은 정확도</span>
+        <span class="tag tag-coral">데이터 충분 필요</span>
+        <span class="tag tag-amber">비선형 패턴 학습</span>
+      </div>
+    </div>
+
+  </div>
+
+  <table>
+    <tr><th>방법</th><th>정확도</th><th>복잡도</th><th>추천 상황</th></tr>
+    <tr><td>정상비율법</td><td>중</td><td>낮음</td><td>빠른 처리, 공식 보고서</td></tr>
+    <tr><td>역거리 가중법</td><td>중</td><td>낮음</td><td>관측소 여러 개</td></tr>
+    <tr><td>크리깅</td><td>높음</td><td>높음</td><td>공간 분석 목적</td></tr>
+    <tr><td>머신러닝</td><td>높음</td><td>높음</td><td>데이터 충분할 때</td></tr>
+  </table>
+
+  <div class="rec-box">
+    <div class="rec-box-title">홍천 6년치 연속 결측 데이터 권장 순서</div>
+    <div class="rec-row"><div class="rec-num">1</div><span>정상비율법으로 빠르게 1차 처리 — 춘천(101), 원주(114) 데이터 활용</span></div>
+    <div class="rec-row"><div class="rec-num">2</div><span>짧은 누락 구간은 시간 보간 병행</span></div>
+    <div class="rec-row"><div class="rec-num">3</div><span>분석 목적이 정밀하다면 Random Forest로 2차 보완</span></div>
+  </div>
+
+  <div class="divider"></div>
 
   <!-- Bottom bar -->
   <div class="bot-wrap">
@@ -420,6 +595,13 @@
     }
     document.getElementById('sp-prev').style.display = spCur === 0 ? 'none' : '';
     document.getElementById('sp-next').style.display = spCur === spTotal - 1 ? 'none' : '';
+  }
+
+  function toggleKriging() {
+    const panel = document.getElementById('kriging-panel');
+    const badge = document.getElementById('kriging-badge');
+    const isOpen = panel.classList.toggle('open');
+    badge.textContent = isOpen ? '▼ 닫기' : '▶ 작동 원리 보기';
   }
 
   function spMove(dir) {
