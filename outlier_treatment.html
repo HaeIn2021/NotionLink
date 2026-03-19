@@ -3,439 +3,771 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>이상치 처리 방법</title>
+<title>이상치 판단 및 처리</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg:        #f5f4f1;
+    --surface:   #ffffff;
+    --border:    #e2e0d8;
+    --border2:   #ccc9be;
+    --text:      #1a1a1a;
+    --muted:     #6b6760;
+    --accent:    #1a4d7c;
+    --accent-l:  #2667a8;
+    --accent-bg: #e8f0fb;
+    --warn:      #7a4f00;
+    --warn-bg:   #fdf3dc;
+    --warn-bd:   #e8c96a;
+    --red:       #b91c1c;
+    --red-bg:    #fef2f2;
+    --red-bd:    #fca5a5;
+    --green:     #166534;
+    --green-bg:  #f0fdf4;
+    --green-bd:  #86efac;
+    --purple:    #4c1d95;
+    --purple-bg: #f5f3ff;
+    --purple-bd: #c4b5fd;
+    --orange:    #9a3412;
+    --orange-bg: #fff7ed;
+    --orange-bd: #fdba74;
+    --gray-bg:   #f5f4f1;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'Noto Sans KR', sans-serif;
+  }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: #f8f7f4;
-    color: #1a1a1a;
-    padding: 2rem 1.5rem 3rem;
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1.25rem 4rem;
     min-width: 320px;
+    line-height: 1.6;
   }
 
-  .page-title {
+  /* ── Header ── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .page-header .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent-l);
+    margin-bottom: .5rem;
+  }
+  .page-header h1 {
     font-size: 22px;
     font-weight: 700;
-    text-align: center;
-    margin-bottom: 0.4rem;
-    color: #1a1a1a;
+    color: var(--text);
+    margin-bottom: .35rem;
+  }
+  .page-header .sub {
+    font-size: 12.5px;
+    color: var(--muted);
   }
 
-  .page-sub {
-    font-size: 13px;
-    text-align: center;
-    color: #888;
-    margin-bottom: 2rem;
-  }
-
-  /* Section */
-  .section-box {
-    border: 1px solid #e4e2dc;
+  /* ── Section ── */
+  .sec {
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 14px;
     overflow: hidden;
     margin-bottom: 1.5rem;
-    background: #fff;
   }
-
-  .section-box-header {
-    background: #f2f0eb;
-    padding: 11px 18px;
-    font-size: 14px;
+  .sec-hdr {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 16px;
+    background: var(--gray-bg);
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
     font-weight: 700;
-    color: #1a1a1a;
-    border-bottom: 1px solid #e4e2dc;
+    color: var(--text);
+  }
+  .sec-hdr .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .sec-body { padding: 16px; }
+
+  /* ── Notice boxes ── */
+  .notice {
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 12px;
+    line-height: 1.75;
+    margin-bottom: 1rem;
+    word-break: keep-all;
+  }
+  .notice strong { font-weight: 700; }
+  .n-yellow { background: var(--warn-bg);   color: var(--warn);   border: 1px solid var(--warn-bd); }
+  .n-blue   { background: var(--accent-bg); color: var(--accent); border: 1px solid #b0c8e8; }
+  .n-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+  .n-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bd); }
+  .n-gray   { background: var(--gray-bg);   color: #555;          border: 1px solid var(--border2); }
+
+  /* ── Principle banner ── */
+  .principle-banner {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    letter-spacing: .02em;
+  }
+  .principle-banner .sub-text {
+    font-size: 11.5px;
+    font-weight: 400;
+    margin-top: 5px;
+    opacity: .85;
+    line-height: 1.6;
   }
 
-  .section-box-body { padding: 16px 18px; }
-
-  /* Cards grid */
+  /* ── Cards grid ── */
   .grid-3 {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 1.25rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1rem;
   }
-
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
   @media (max-width: 640px) {
-    .grid-3 { grid-template-columns: 1fr; }
-    .method-row { grid-template-columns: 1fr !important; }
+    .grid-3, .grid-2, .method-row { grid-template-columns: 1fr !important; }
+    .flow-row { flex-direction: column !important; }
+    .flow-arrow { transform: rotate(90deg); }
   }
 
   .card {
-    background: #fff;
-    border: 1px solid #e4e2dc;
-    border-radius: 12px;
-    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 13px;
   }
-
-  .card-header {
-    font-size: 14px;
+  .card-hdr {
+    font-size: 13px;
     font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 4px;
-  }
-
-  .card-sub {
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 12px;
-    line-height: 1.5;
-    word-break: keep-all;
-    overflow-wrap: break-word;
-  }
-
-  .inner-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: #1a1a1a;
+    color: var(--text);
     margin-bottom: 3px;
   }
-
-  .inner-desc {
-    font-size: 12px;
-    color: #555;
-    line-height: 1.6;
+  .card-sub {
+    font-size: 11.5px;
+    color: var(--muted);
     margin-bottom: 10px;
+    line-height: 1.5;
     word-break: keep-all;
-    overflow-wrap: break-word;
   }
+  .lbl { font-size: 11.5px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .desc { font-size: 11.5px; color: #555; line-height: 1.6; margin-bottom: 9px; word-break: keep-all; }
 
-  /* Badges */
+  /* ── Badges ── */
   .badge {
     display: inline-block;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 500;
-    padding: 2px 9px;
+    padding: 2px 8px;
     border-radius: 20px;
-    margin-right: 4px;
-    margin-top: 5px;
+    margin: 2px 2px 0 0;
   }
+  .b-red    { background: var(--red-bg);    color: var(--red); }
+  .b-blue   { background: var(--accent-bg); color: var(--accent-l); }
+  .b-green  { background: var(--green-bg);  color: var(--green); }
+  .b-yellow { background: var(--warn-bg);   color: var(--warn); }
+  .b-gray   { background: var(--gray-bg);   color: #555; }
+  .b-purple { background: var(--purple-bg); color: var(--purple); }
+  .b-orange { background: var(--orange-bg); color: var(--orange); }
 
-  .badge-red    { background: #fdecea; color: #c0392b; }
-  .badge-blue   { background: #e8f0fb; color: #1a5fa8; }
-  .badge-green  { background: #e6f4ec; color: #1a7a3f; }
-  .badge-yellow { background: #fef9e7; color: #a07000; }
-  .badge-gray   { background: #f2f0eb; color: #555; }
-  .badge-purple { background: #eeedfe; color: #3c3489; }
+  /* ── Type tag ── */
+  .type-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-right: 5px;
+    font-family: var(--mono);
+    letter-spacing: .04em;
+  }
+  .t-spike    { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+  .t-shift    { background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; }
+  .t-drift    { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-bd); }
+  .t-flat     { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+  .t-normal   { background: var(--accent-bg); color: var(--accent); border: 1px solid #b0c8e8; }
 
-  /* Interpolation method cards */
+  /* ── Method cards (interactive) ── */
   .method-row {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    margin-bottom: 10px;
   }
-
   .method-card {
-    background: #f8f7f4;
+    background: var(--gray-bg);
     border: 1.5px solid transparent;
     border-radius: 10px;
     padding: 13px;
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+    transition: border-color .2s, background .2s;
   }
+  .method-card:hover { border-color: var(--border2); }
+  .method-card.active { border-color: var(--accent-l); background: var(--accent-bg); }
+  .method-card.active .m-title { color: var(--accent); }
+  .m-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; word-break: keep-all; }
+  .m-desc  { font-size: 11.5px; color: #666; line-height: 1.5; margin-bottom: 7px; word-break: keep-all; }
 
-  .method-card:hover { border-color: #ccc; }
-
-  .method-card.active {
-    border-color: #534ab7;
-    background: #eeedfe;
-  }
-
-  .method-card.active .method-title { color: #3c3489; }
-  .method-card.active .method-desc  { color: #534ab7; }
-
-  .method-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 4px;
-    word-break: keep-all;
-  }
-
-  .method-desc {
-    font-size: 11px;
-    color: #666;
-    line-height: 1.5;
-    margin-bottom: 8px;
-    word-break: keep-all;
-    overflow-wrap: break-word;
-  }
-
-  /* Explainer */
-  .explainer-box {
-    border: 1px solid #e4e2dc;
-    border-radius: 12px;
+  /* ── Explainer ── */
+  .explainer {
+    border: 1px solid var(--border);
+    border-radius: 11px;
     overflow: hidden;
-    margin-top: 12px;
+    margin-top: 10px;
     display: none;
   }
-
-  .explainer-box.show { display: block; }
-
-  .explainer-header {
-    background: #f2f0eb;
-    padding: 10px 16px;
-    font-size: 13px;
+  .explainer.show { display: block; }
+  .expl-hdr {
+    background: var(--gray-bg);
+    padding: 9px 14px;
+    font-size: 12.5px;
     font-weight: 700;
-    color: #1a1a1a;
-    border-bottom: 1px solid #e4e2dc;
+    border-bottom: 1px solid var(--border);
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
   }
+  .expl-hdr span:last-child { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .expl-body { padding: 16px; }
 
-  .explainer-header span:last-child {
-    font-size: 11px;
-    color: #888;
-    font-weight: 400;
-  }
-
-  .explainer-body { padding: 18px; }
-
-  .dots {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 16px;
-  }
-
+  .dots { display: flex; gap: 7px; justify-content: center; margin-bottom: 14px; }
   .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #ccc;
-    cursor: pointer;
-    transition: background 0.2s;
-    border: none;
-    padding: 0;
+    width: 9px; height: 9px; border-radius: 50%; background: #ccc;
+    cursor: pointer; border: none; padding: 0; transition: background .2s;
   }
-
-  .dot.active { background: #534ab7; }
+  .dot.active { background: var(--accent-l); }
 
   .step-panel { display: none; }
   .step-panel.show { display: block; }
-
-  .step-label {
-    font-size: 12px;
-    color: #534ab7;
-    font-weight: 700;
-    margin-bottom: 5px;
+  .step-lbl   { font-size: 11.5px; font-weight: 700; color: var(--accent-l); margin-bottom: 4px; }
+  .step-title { font-size: 15px; font-weight: 700; margin-bottom: 7px; word-break: keep-all; }
+  .step-desc  { font-size: 12px; color: #555; line-height: 1.75; margin-bottom: 12px; word-break: keep-all; }
+  .nav-row { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .btn-next {
+    background: var(--accent-l); color: #fff; border: none; border-radius: 8px;
+    padding: 7px 20px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    font-family: var(--sans); transition: opacity .2s;
   }
+  .btn-next:hover { opacity: .85; }
+  .btn-next:disabled { opacity: .35; cursor: default; }
 
-  .step-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 8px;
-    word-break: keep-all;
+  /* ── Table ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
+  .data-table th {
+    background: var(--accent-bg); color: var(--accent); font-weight: 700;
+    padding: 7px 10px; text-align: center; border: 1px solid var(--border); word-break: keep-all;
   }
-
-  .step-desc {
-    font-size: 12px;
-    color: #555;
-    line-height: 1.75;
-    margin-bottom: 14px;
-    word-break: keep-all;
-    overflow-wrap: break-word;
+  .data-table td {
+    padding: 7px 10px; text-align: center; border: 1px solid var(--border);
+    color: var(--text); background: #fff; word-break: keep-all;
   }
+  .data-table tr:nth-child(even) td { background: var(--gray-bg); }
+  .data-table td.left { text-align: left; }
+  td.missing   { color: var(--red); font-weight: 700; }
+  td.estimated { color: var(--accent-l); font-weight: 700; }
+  tr.hl td     { background: var(--accent-bg) !important; }
 
-  /* Table */
-  table.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-bottom: 14px;
+  /* ── Code / formula ── */
+  .code-box {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 11.5px;
+    font-family: var(--mono);
+    line-height: 1.8;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    white-space: pre;
   }
+  .code-box .c-comment { color: #6c7086; }
+  .code-box .c-key     { color: #89b4fa; }
+  .code-box .c-str     { color: #a6e3a1; }
+  .code-box .c-num     { color: #fab387; }
+  .code-box .c-fn      { color: #cba6f7; }
 
-  table.data-table th {
-    background: #eeedfe;
-    color: #3c3489;
-    font-weight: 700;
-    padding: 8px 10px;
-    text-align: center;
-    border: 1px solid #e4e2dc;
-    word-break: keep-all;
-  }
-
-  table.data-table td {
-    padding: 8px 10px;
-    text-align: center;
-    border: 1px solid #e4e2dc;
-    color: #1a1a1a;
-    background: #fff;
-    word-break: keep-all;
-  }
-
-  table.data-table tr:nth-child(even) td { background: #f8f7f4; }
-
-  .missing   { color: #c0392b; font-weight: 700; }
-  .estimated { color: #1a5fa8; font-weight: 700; }
-  .highlight-row td { background: #e8f0fb !important; }
-
-  /* Formula box */
   .formula-box {
-    background: #f2f0eb;
+    background: var(--gray-bg);
     border-radius: 8px;
-    padding: 11px 14px;
+    padding: 10px 13px;
     font-size: 12px;
     color: #444;
-    margin-bottom: 12px;
-    font-family: 'Courier New', monospace;
+    margin-bottom: 10px;
+    font-family: var(--mono);
     line-height: 1.75;
     word-break: break-all;
   }
 
-  /* Nav */
-  .nav-row {
+  /* ── Flow diagram ── */
+  .flow-row {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 10px;
+    align-items: flex-start;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 10px;
   }
-
-  .btn-next {
-    background: #534ab7;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 22px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: 'Noto Sans KR', sans-serif;
-    transition: opacity 0.2s;
-  }
-
-  .btn-next:hover { opacity: 0.85; }
-  .btn-next:disabled { opacity: 0.35; cursor: default; }
-
-  /* Warn / info box */
-  .warn-box {
-    border-radius: 10px;
-    padding: 12px 15px;
-    font-size: 12px;
-    line-height: 1.7;
-    margin-bottom: 1.25rem;
+  .flow-node {
+    flex: 0 0 auto;
+    border-radius: 9px;
+    padding: 9px 11px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 80px;
+    line-height: 1.4;
     word-break: keep-all;
-    overflow-wrap: break-word;
+  }
+  .fn-start  { background: var(--accent); color: #fff; }
+  .fn-check  { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-bd); }
+  .fn-ok     { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+  .fn-warn   { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-bd); }
+  .fn-err    { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+  .flow-arrow {
+    flex: 0 0 auto;
+    font-size: 16px;
+    color: var(--muted);
+    align-self: center;
+    line-height: 1;
   }
 
-  .warn-yellow { background: #fef9e7; color: #7a5800; border: 1px solid #f0d070; }
-  .warn-gray   { background: #f2f0eb; color: #555;    border: 1px solid #ddd;    }
+  /* ── QC table ── */
+  .qc-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
+  .qc-table th {
+    padding: 7px 10px; border: 1px solid var(--border);
+    background: #1e1e2e; color: #cdd6f4; font-weight: 700; text-align: center;
+  }
+  .qc-table td { padding: 7px 10px; border: 1px solid var(--border); text-align: center; word-break: keep-all; }
+  .qc-table td.left { text-align: left; }
+  .qc-0 { background: var(--green-bg); color: var(--green); font-weight: 700; }
+  .qc-1 { background: var(--warn-bg);  color: var(--warn);  font-weight: 700; }
+  .qc-2 { background: var(--red-bg);   color: var(--red);   font-weight: 700; }
+  .qc-9 { background: var(--gray-bg);  color: #777;         font-weight: 700; }
 
-  /* Inner section box */
-  .inner-section {
-    border: 1px solid #e4e2dc;
+  /* ── Inner section ── */
+  .inner-sec {
+    border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
+    margin-bottom: .9rem;
+  }
+  .inner-sec:last-child { margin-bottom: 0; }
+  .inner-sec-hdr {
+    background: var(--gray-bg);
+    padding: 8px 13px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .inner-sec-body { padding: 13px; }
+
+  /* ── Step indicator (numbered) ── */
+  .step-indicator {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     margin-bottom: 1rem;
   }
-
-  .inner-section:last-child { margin-bottom: 0; }
-
-  .inner-section-header {
-    background: #f2f0eb;
-    padding: 9px 14px;
-    font-size: 13px;
+  .si-item {
+    display: flex;
+    gap: 12px;
+    position: relative;
+  }
+  .si-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 28px;
+    bottom: -8px;
+    width: 1.5px;
+    background: var(--border2);
+  }
+  .si-num {
+    flex: 0 0 auto;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11.5px;
     font-weight: 700;
-    color: #1a1a1a;
-    border-bottom: 1px solid #e4e2dc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    position: relative;
+    z-index: 1;
+  }
+  .si-content { flex: 1; padding-bottom: 16px; }
+  .si-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .si-body  { font-size: 12px; color: #555; line-height: 1.7; word-break: keep-all; }
+
+  /* ── Reference section ── */
+  .ref-list { list-style: none; padding: 0; margin: 0; }
+  .ref-list li {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.7;
+    padding: 5px 0 5px 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    word-break: keep-all;
+  }
+  .ref-list li:last-child { border-bottom: none; }
+  .ref-list li::before {
+    content: '[' attr(data-n) ']';
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+    color: var(--accent-l);
+    font-size: 10.5px;
+  }
+  .ref-list a {
+    color: var(--accent-l);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent-l);
+    font-size: 11px;
+    word-break: break-all;
+  }
+  .ref-list a:hover { color: var(--accent); border-bottom-style: solid; }
+  .ref-num {
+    display: inline;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-l);
+    vertical-align: super;
+    margin: 0 1px;
+    cursor: default;
   }
 
-  .inner-section-body { padding: 13px 14px; }
+  /* ── Divider ── */
+  .divider { border: none; border-top: 1px dashed var(--border2); margin: 14px 0; }
 </style>
 </head>
 <body>
 
-<div class="page-title">이상치 처리 방법</div>
-<div class="page-sub">수문 데이터 전처리 · 수문특성분석 실습</div>
+<div class="page-header">
+  <div class="eyebrow">Hydrology · Data Quality Control</div>
+  <h1>이상치 판단 및 처리</h1>
+</div>
 
-<!-- ① 일반적인 처리 -->
-<div class="section-box">
-  <div class="section-box-header">① 일반적인 이상치 처리 방법</div>
-  <div class="section-box-body">
+<!-- ─── 핵심 원칙 ─────────────────────────────── -->
+<div class="principle-banner">
+  🔑 &nbsp;핵심 원칙: &nbsp;"물리가 먼저, 통계가 나중"
+  <div class="sub-text">
+    통계적으로 이상해 보여도 강수–유출 메커니즘으로 설명되면 정상 데이터입니다.<br>
+    반대로, 통계 범위 내에 있어도 물리적으로 설명 불가하면 이상치입니다.<span class="ref-num" title="WMO No.168, 2008">[1]</span>
+  </div>
+</div>
+
+
+<!-- ─── ① 분석 전 필수 확인 ──────────────────── -->
+<div class="sec">
+  <div class="sec-hdr"><span class="num">1</span> 분석 전 필수 확인 — 수문학적 맥락</div>
+  <div class="sec-body">
+
+    <div class="notice n-yellow">
+      ⚠ 통계 분석 이전에 아래 <strong>수문학적 맥락을 먼저 파악</strong>해야 합니다.
+      통계만으로는 홍수 첨두를 이상치로, 센서 고착값을 정상으로 오판할 수 있습니다.<span class="ref-num" title="Beven, 2012">[2]</span>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-hdr">유역 특성</div>
+        <div class="lbl">면적 · 불투수율 · 경사</div>
+        <div class="desc">도시 하천 = 강우 후 수위 급등 정상<br>산지 하천 = 시간 지연(Lag Time) 존재</div>
+        <div class="lbl">Lag Time 고려</div>
+        <div class="desc">유역 면적이 클수록 수위 반응 완만 → 변화율 임계값 조정 필요</div>
+        <span class="badge b-blue">유역 면적</span>
+        <span class="badge b-gray">Tc 집중시간</span>
+      </div>
+      <div class="card">
+        <div class="card-hdr">계절성</div>
+        <div class="lbl">홍수기 vs 갈수기</div>
+        <div class="desc">동일 수위값도 계절에 따라 판단이 달라짐<br>홍수기·갈수기를 같은 모집단으로 보면 오판<span class="ref-num" title="Vogel & Fennessey, 1994">[3]</span></div>
+        <div class="lbl">한국 기준</div>
+        <div class="desc">홍수기: 6~9월 / 갈수기: 12~2월</div>
+        <span class="badge b-red">홍수기</span>
+        <span class="badge b-blue">갈수기</span>
+      </div>
+      <div class="card">
+        <div class="card-hdr">외부 요인</div>
+        <div class="lbl">강수 없이 수위 급등 시</div>
+        <div class="desc">댐 방류, 조위 역류, 상류 취수 여부를 먼저 확인</div>
+        <div class="lbl">Rating Curve 연동</div>
+        <div class="desc">수위는 반드시 강수량 데이터와 교차 검증<span class="ref-num" title="ISO 1100-2, 2010">[4]</span></div>
+        <span class="badge b-orange">댐 방류</span>
+        <span class="badge b-orange">조위 영향</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ─── ② 이상치 유형 분류 ────────────────────── -->
+<div class="sec">
+  <div class="sec-hdr"><span class="num">2</span> 수문학적 이상치 유형 분류 <span class="ref-num" title="Kundzewicz et al., 2012">[5]</span></div>
+  <div class="sec-body">
+
+    <div class="notice n-blue">
+      수문 데이터 이상치는 원인과 처리 방법이 다른 4가지 유형으로 구분합니다.<br>
+      유형 식별 없이 일괄 제거·대체하면 중요한 수문 정보를 잃을 수 있습니다.
+    </div>
+
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-hdr"><span class="type-tag t-spike">Spike</span>단일 시점 급등·급락</div>
+        <div class="desc">전후 값과 단절된 단발성 이상값. 수위 변화가 물리적으로 불가능한 수준.</div>
+        <div class="lbl">주요 원인</div>
+        <div class="desc">센서 부유물 충격, 통신 오류, 비트 오류</div>
+        <div class="lbl">판단 기준</div>
+        <div class="desc">|dH/dt| > 유역별 물리 최대값 (예: 소하천 0.5 m/h)</div>
+        <span class="badge b-red">즉시 플래깅</span>
+        <span class="badge b-gray">QC = 2</span>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="type-tag t-shift">Shift</span>기준선 급변</div>
+        <div class="desc">특정 시점부터 수위 레벨이 갑자기 이동. 이후 패턴은 유사하지만 기준이 다름.</div>
+        <div class="lbl">주요 원인</div>
+        <div class="desc">센서 위치 변동, 하상 변동, 영점(Zero) 이탈</div>
+        <div class="lbl">판단 기준</div>
+        <div class="desc">강수 이벤트 없는 시점에 갑작스러운 수위 레벨 이동</div>
+        <span class="badge b-orange">BM 이력 확인</span>
+        <span class="badge b-gray">QC = 1~2</span>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="type-tag t-drift">Drift</span>점진적 이탈</div>
+        <div class="desc">서서히 비현실적인 방향으로 증가 또는 감소. 장기간 누적되므로 발견이 늦음.</div>
+        <div class="lbl">주요 원인</div>
+        <div class="desc">센서 fouling(오염), 침적물 누적, 전압 저하</div>
+        <div class="lbl">판단 기준</div>
+        <div class="desc">STL 분해 잔차 증가 추세, 인접 관측소와 장기 乖離</div>
+        <span class="badge b-purple">STL 분석</span>
+        <span class="badge b-gray">QC = 1~2</span>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="type-tag t-flat">Flatline</span>동일값 반복 (고착)</div>
+        <div class="desc">일정 값이 수 시간~수일 동안 지속. 갈수기 저수위 구간에서 탐지 어려움.</div>
+        <div class="lbl">주요 원인</div>
+        <div class="desc">센서 동결, 통신 단절, 동일 패킷 반복 전송</div>
+        <div class="lbl">판단 기준</div>
+        <div class="desc">동일값 ≥ 3시간 연속 → 의심 / ≥ 6시간 → 오류 강력 의심<span class="ref-num" title="Chrisman & Juracek, 1997">[6]</span></div>
+        <span class="badge b-red">센서 점검 필요</span>
+        <span class="badge b-gray">QC = 2</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ─── ③ 판단 방법론 ─────────────────────────── -->
+<div class="sec">
+  <div class="sec-hdr"><span class="num">3</span> 이상치 판단 방법론 — 5단계 우선순위</div>
+  <div class="sec-body">
+
+    <div class="step-indicator">
+
+      <!-- 방법 1 -->
+      <div class="si-item">
+        <div class="si-num">1</div>
+        <div class="si-content">
+          <div class="si-title">물리 기반 임계값 <span class="badge b-red">최우선</span></div>
+          <div class="si-body">
+            수위 변화율 <code>|dH/dt|</code> > 물리적 최대 가능 상승률 → 즉시 이상치<br>
+            최대 가능 상승률 = 유역면적 × 극한강수량(PMF)으로 추정<span class="ref-num" title="WMO No.168, 2008">[1]</span><br>
+            예: 유역 100 km² 소하천 → 시간당 0.5 m 이상 상승은 물리적으로 불가능
+          </div>
+        </div>
+      </div>
+
+      <!-- 방법 2 -->
+      <div class="si-item">
+        <div class="si-num">2</div>
+        <div class="si-content">
+          <div class="si-title">강수–수위 상관 검증 (Rainfall–Runoff Consistency)<span class="ref-num" title="Beven, 2012">[2]</span></div>
+          <div class="si-body" style="margin-bottom:10px">
+            강수량 = 0 &amp;&amp; 수위 급등 → 이상치 후보 ①<br>
+            강수량 > 임계값 &amp;&amp; 수위 무반응 → 이상치 후보 ②<br>
+            유역 집중시간(Tc) 이내 수위 변화 기대량 범위 이탈 → 플래깅
+          </div>
+          <table class="data-table">
+            <thead><tr><th>조건</th><th>기대 결과</th><th>판단</th></tr></thead>
+            <tbody>
+              <tr><td class="left">강수 없음 + 수위 급등</td><td>변화 없음이 정상</td><td class="missing">이상치 후보 ①</td></tr>
+              <tr><td class="left">강수 있음 + 수위 무반응</td><td>Tc 이내 상승 기대</td><td class="missing">이상치 후보 ②</td></tr>
+              <tr><td class="left">강수 후 Tc 이내 수위 상승</td><td>수문곡선 패턴 일치</td><td class="estimated">정상 (홍수 피크)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 방법 3 -->
+      <div class="si-item">
+        <div class="si-num">3</div>
+        <div class="si-content">
+          <div class="si-title">통계적 탐지 — 계절별 분리 필수 <span class="badge b-yellow">⚠ 주의사항 있음</span></div>
+          <div class="notice n-yellow" style="margin-bottom:10px">
+            수위 데이터는 <strong>정규분포를 따르지 않습니다</strong>(GEV·Gumbel 극값 분포).<span class="ref-num" title="Katz et al., 2002">[7]</span>
+            홍수기와 갈수기를 같은 모집단으로 보면 정상 홍수 피크도 이상치로 오판합니다.
+            Z-score 임계값은 일반 3σ가 아닌 <strong>3.5~4σ를 권장</strong>합니다.
+          </div>
+        </div>
+      </div>
+
+      <!-- 방법 4 -->
+      <div class="si-item">
+        <div class="si-num">4</div>
+        <div class="si-content">
+          <div class="si-title">시계열 분해(STL) 잔차 분석<span class="ref-num" title="Cleveland et al., 1990">[8]</span></div>
+          <div class="si-body" style="margin-bottom:10px">
+            수위(t) = 추세 + 계절성 + <strong>잔차</strong> → 잔차가 큰 시점이 이상치 후보<br>
+            단, 홍수 피크를 이상치로 오판하지 않도록 강수 데이터 교차 검증 필수
+          </div>
+        </div>
+      </div>
+
+      <!-- 방법 5 -->
+      <div class="si-item">
+        <div class="si-num">5</div>
+        <div class="si-content">
+          <div class="si-title">공간적 교차 검증 (Spatial Cross-validation) <span class="badge b-green">가장 강력</span><span class="ref-num" title="Durrant & Maidment, 2003">[9]</span></div>
+          <div class="si-body">
+            동일 수계 내 상·하류 관측소 수위 패턴과 불일치 → 이상치 가능성 높음<br>
+            상류 수위 상승 없이 하류만 급등 → 센서 오류로 강하게 의심<br>
+            광역 강우 이벤트 시 인접 관측소와 동반 상승 → 정상으로 판단
+          </div>
+          <div class="notice n-green" style="margin-top:8px;margin-bottom:0">
+            💡 인접 관측소 데이터가 있다면 <strong>공간 교차 검증을 최우선</strong>으로 활용하세요.
+            단일 통계 방법 대비 오탐지율이 현저히 낮습니다.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /step-indicator -->
+  </div>
+</div>
+
+
+
+
+
+<!-- ─── ④ 일반적 이상치 처리 방법 ────────────── -->
+<div class="sec">
+  <div class="sec-hdr"><span class="num">4</span> 일반적 이상치 처리 방법</div>
+  <div class="sec-body">
+
     <div class="grid-3">
 
       <div class="card">
-        <div class="card-header">삭제 (제거)</div>
-        <div class="card-sub">이상치 행 또는 값을 제거</div>
-        <div class="inner-label">적용 상황</div>
-        <div class="inner-desc">센서 오류, 입력 오류가 명확한 경우</div>
-        <div class="inner-label">방법</div>
-        <div class="inner-desc">해당 값을 NaN으로 대체 후 결측 처리</div>
-        <div class="inner-label">주의</div>
-        <div class="inner-desc" style="margin-bottom:8px">삭제 후 결측치 처리 방침과 연결됨</div>
-        <span class="badge badge-red">행 삭제 dropna()</span>
-        <span class="badge badge-gray">값 → NaN</span>
-      </div>
-
-      <div class="card">
-        <div class="card-header">대체 (대입)</div>
-        <div class="card-sub">이상값을 통계값으로 교체</div>
-        <div class="inner-label">적용 상황</div>
-        <div class="inner-desc">이상치가 분명하고 대체값 근거가 있는 경우</div>
-        <div class="inner-label">방법</div>
-        <div class="inner-desc">평균·중앙값·전후값으로 대체</div>
-        <div class="inner-label">주의</div>
-        <div class="inner-desc" style="margin-bottom:8px">수문 데이터에는 거의 사용 안 함 (근거 부족)</div>
-        <span class="badge badge-blue">평균 대체</span>
-        <span class="badge badge-blue">중앙값 대체</span>
-      </div>
-
-      <div class="card">
-        <div class="card-header">플래그 표시</div>
+        <div class="card-hdr">플래그 표시 <span class="badge b-green">실무 기본</span></div>
         <div class="card-sub">원본 유지 + 의심 구간 기록</div>
-        <div class="inner-label">적용 상황</div>
-        <div class="inner-desc">이상치 여부가 불확실하거나 원본 보존 필요</div>
-        <div class="inner-label">방법</div>
-        <div class="inner-desc">flag 컬럼 추가 (0=정상, 1=의심)</div>
-        <div class="inner-label">주의</div>
-        <div class="inner-desc" style="margin-bottom:8px">실무에서 가장 안전하고 많이 쓰는 방법</div>
-        <span class="badge badge-green">원본 보존</span>
-        <span class="badge badge-green">실무 기본</span>
+        <div class="lbl">적용 상황</div>
+        <div class="desc">이상치 여부 불확실하거나 원본 보존 필요 시</div>
+        <div class="lbl">방법</div>
+        <div class="desc">QC 컬럼 추가 (0=정상, 1=의심, 2=오류)</div>
+        <span class="badge b-green">원본 보존</span>
+        <span class="badge b-green">수문 표준<span class="ref-num" title="ISO 1100-2, 2010">[4]</span></span>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">삭제 (제거)</div>
+        <div class="card-sub">이상치 값을 NaN으로 대체 후 결측 처리</div>
+        <div class="lbl">적용 상황</div>
+        <div class="desc">센서 오류·입력 오류가 명확하고 QC=2인 경우</div>
+        <div class="lbl">주의</div>
+        <div class="desc">삭제 후 결측치 처리 방침과 연계. 홍수 피크 삭제 금지.</div>
+        <span class="badge b-red">QC=2 한정</span>
+        <span class="badge b-gray">값 → NaN</span>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">대체 (대입)</div>
+        <div class="card-sub">이상값을 통계값 또는 유도값으로 교체</div>
+        <div class="lbl">적용 상황</div>
+        <div class="desc">근거 있는 대체값 확보 시 (Rating Curve, 인접 관측소 등)</div>
+        <div class="lbl">주의</div>
+        <div class="desc">단순 평균·중앙값 대체는 수문 데이터에 부적합<span class="ref-num" title="Durrant & Maidment, 2003">[9]</span></div>
+        <span class="badge b-blue">근거 필수</span>
+        <span class="badge b-yellow">플래그 병행</span>
       </div>
 
     </div>
 
     <!-- 보간 -->
-    <div class="inner-section">
-      <div class="inner-section-header">보간 (Interpolation)</div>
-      <div class="inner-section-body">
-        <div class="method-row">
+    <div class="inner-sec">
+      <div class="inner-sec-hdr">📐 보간 (Interpolation)</div>
+      <div class="inner-sec-body">
+        <div class="method-row" id="interp-cards">
 
-          <div class="method-card" onclick="toggleExplainer('linear')">
-            <div class="method-title">선형 보간</div>
-            <div class="method-desc">전후 두 점 사이를 직선으로 연결</div>
-            <span class="badge badge-gray">단기 결측</span>
-            <span class="badge badge-yellow">갈수기 한정</span>
+          <div class="method-card" onclick="toggleInterp('linear')">
+            <div class="m-title">선형 보간</div>
+            <div class="m-desc">전후 두 점 사이를 직선으로 연결</div>
+            <span class="badge b-gray">단기 결측</span>
+            <span class="badge b-yellow">갈수기 한정</span>
           </div>
 
-          <div class="method-card" onclick="toggleExplainer('spline')">
-            <div class="method-title">스플라인 보간</div>
-            <div class="method-desc">곡선 기반의 부드러운 추정</div>
-            <span class="badge badge-gray">완만한 변화 구간</span>
+          <div class="method-card" onclick="toggleInterp('spline')">
+            <div class="m-title">스플라인 보간</div>
+            <div class="m-desc">곡선 기반의 부드러운 추정</div>
+            <span class="badge b-gray">완만한 변화</span>
           </div>
 
-          <div class="method-card active" id="card-time" onclick="toggleExplainer('time')">
-            <div class="method-title">시간 기반 보간</div>
-            <div class="method-desc">시간 간격을 고려한 보간 (시계열 전용)</div>
-            <span class="badge badge-blue">시계열 적합</span>
-            <span class="badge badge-purple">▼ 단계별 보기</span>
+          <div class="method-card active" id="card-time" onclick="toggleInterp('time')">
+            <div class="m-title">시간 기반 보간</div>
+            <div class="m-desc">시간 간격을 고려한 보간 (시계열 전용)</div>
+            <span class="badge b-blue">시계열 적합</span>
+            <span class="badge b-purple">▼ 단계별 보기</span>
           </div>
 
         </div>
 
         <!-- 시간 기반 보간 Explainer -->
-        <div class="explainer-box show" id="explainer-time">
-          <div class="explainer-header">
+        <div class="explainer show" id="explainer-time">
+          <div class="expl-hdr">
             <span>시간 기반 보간 — 단계별 예시</span>
             <span>수위(wl) 결측 보간</span>
           </div>
-          <div class="explainer-body">
-
+          <div class="expl-body">
             <div class="dots">
               <button class="dot active" onclick="goStep(0)"></button>
               <button class="dot" onclick="goStep(1)"></button>
@@ -443,9 +775,8 @@
               <button class="dot" onclick="goStep(3)"></button>
             </div>
 
-            <!-- Step 0 -->
             <div class="step-panel show" id="step-0">
-              <div class="step-label">개요</div>
+              <div class="step-lbl">개요</div>
               <div class="step-title">시간 기반 보간이란?</div>
               <div class="step-desc">
                 일반 선형 보간은 행 번호 기준으로 값을 채웁니다.<br>
@@ -456,154 +787,170 @@
                 <thead><tr><th>날짜</th><th>수위 (m)</th><th>비고</th></tr></thead>
                 <tbody>
                   <tr><td>01-01</td><td>0.37</td><td style="color:#888">정상</td></tr>
-                  <tr><td>01-02</td><td class="missing">?</td><td style="color:#c0392b">결측</td></tr>
-                  <tr><td>01-04</td><td class="missing">?</td><td style="color:#c0392b">결측 (2일 공백)</td></tr>
+                  <tr><td>01-02</td><td class="missing">?</td><td style="color:var(--red)">결측</td></tr>
+                  <tr><td>01-04</td><td class="missing">?</td><td style="color:var(--red)">결측 (2일 공백)</td></tr>
                   <tr><td>01-05</td><td>0.45</td><td style="color:#888">정상</td></tr>
                 </tbody>
               </table>
-              <div class="step-desc">아래 데이터로 단계별로 살펴봅니다.</div>
               <div class="nav-row"><button class="btn-next" onclick="goStep(1)">다음</button></div>
             </div>
 
-            <!-- Step 1 -->
             <div class="step-panel" id="step-1">
-              <div class="step-label">1단계</div>
+              <div class="step-lbl">1단계</div>
               <div class="step-title">시간 간격 확인</div>
               <div class="step-desc">
                 01-01 → 01-05 사이 총 시간 간격은 <strong>4일</strong>입니다.<br>
-                결측 위치는 01-02 (1일 후), 01-04 (3일 후)입니다.<br>
-                각 결측값의 <strong>시간 비율</strong>을 먼저 계산합니다.
+                결측 위치는 01-02(1일 후), 01-04(3일 후)입니다.
               </div>
-              <div class="formula-box">
-                전체 간격 = 01-05 − 01-01 = 4일<br>
-                01-02 비율 = 1일 / 4일 = 0.25<br>
-                01-04 비율 = 3일 / 4일 = 0.75
-              </div>
+              <div class="formula-box">전체 간격 = 01-05 − 01-01 = 4일
+01-02 비율 = 1일 / 4일 = 0.25
+01-04 비율 = 3일 / 4일 = 0.75</div>
               <div class="nav-row"><button class="btn-next" onclick="goStep(2)">다음</button></div>
             </div>
 
-            <!-- Step 2 -->
             <div class="step-panel" id="step-2">
-              <div class="step-label">2단계</div>
+              <div class="step-lbl">2단계</div>
               <div class="step-title">추정값 계산</div>
               <div class="step-desc">
-                시작값 0.37m, 종료값 0.45m, 차이는 <strong>0.08m</strong>입니다.<br>
+                시작값 0.37m, 종료값 0.45m, 차이 <strong>0.08m</strong><br>
                 각 비율에 차이를 곱해 더하면 추정값이 나옵니다.
               </div>
-              <div class="formula-box">
-                01-02 추정 = 0.37 + 0.25 × 0.08 = <strong>0.39m</strong><br>
-                01-04 추정 = 0.37 + 0.75 × 0.08 = <strong>0.43m</strong>
-              </div>
-              <div class="step-desc" style="margin-top:8px">
-                선형 보간과 달리 <strong>날짜 간격이 고르지 않아도</strong> 정확하게 계산됩니다.
-              </div>
+              <div class="formula-box">01-02 추정 = 0.37 + 0.25 × 0.08 = <strong>0.39m</strong>
+01-04 추정 = 0.37 + 0.75 × 0.08 = <strong>0.43m</strong></div>
               <div class="nav-row"><button class="btn-next" onclick="goStep(3)">다음</button></div>
             </div>
 
-            <!-- Step 3 -->
             <div class="step-panel" id="step-3">
-              <div class="step-label">3단계</div>
-              <div class="step-title">결과 확인</div>
+              <div class="step-lbl">3단계</div>
+              <div class="step-title">결과 확인 &amp; 플래그 표시</div>
               <div class="step-desc">
                 결측값이 채워졌습니다. 추정값은 파란색으로 표시됩니다.<br>
                 실무에서는 <strong>flag 컬럼</strong>으로 원본과 추정값을 반드시 구분합니다.
               </div>
               <table class="data-table">
-                <thead><tr><th>날짜</th><th>수위 (m)</th><th>flag</th></tr></thead>
+                <thead><tr><th>날짜</th><th>수위 (m)</th><th>QC flag</th></tr></thead>
                 <tbody>
                   <tr><td>01-01</td><td>0.37</td><td>0 (원본)</td></tr>
-                  <tr class="highlight-row"><td>01-02</td><td class="estimated">0.39</td><td style="color:#1a5fa8">1 (추정)</td></tr>
-                  <tr class="highlight-row"><td>01-04</td><td class="estimated">0.43</td><td style="color:#1a5fa8">1 (추정)</td></tr>
+                  <tr class="hl"><td>01-02</td><td class="estimated">0.39</td><td style="color:var(--accent-l)">1 (추정)</td></tr>
+                  <tr class="hl"><td>01-04</td><td class="estimated">0.43</td><td style="color:var(--accent-l)">1 (추정)</td></tr>
                   <tr><td>01-05</td><td>0.45</td><td>0 (원본)</td></tr>
                 </tbody>
               </table>
-              <div class="formula-box">df['wl'] = df.set_index('ymd')['wl'].interpolate(method='time').values</div>
               <div class="nav-row"><button class="btn-next" disabled>완료</button></div>
             </div>
 
           </div>
-        </div>
+        </div><!-- /explainer-time -->
+
       </div>
-    </div>
-  </div>
-</div>
+    </div><!-- /보간 inner-sec -->
 
-<!-- ② 수문학적 관점 -->
-<div class="section-box">
-  <div class="section-box-header">② 수문학적 관점에서의 이상치 처리</div>
-  <div class="section-box-body">
-
-    <div class="warn-box warn-yellow">
-      ⚠ 수문 데이터에서 통계적으로 튀는 값 = 반드시 이상치가 아닙니다.<br>
-      <strong>제거 전 반드시 수문학적 맥락을 먼저 확인</strong>해야 합니다.
-    </div>
-
-    <div class="card" style="margin-bottom:1rem">
-      <div class="card-header">처리가 필요한 경우</div>
-      <div class="card-sub" style="margin-bottom:10px">물리적으로 불가능하거나 오류인 경우</div>
-      <div style="font-size:12px;color:#555;line-height:1.9;word-break:keep-all;overflow-wrap:break-word">
-        <span class="badge badge-blue">수위 음수</span> 물리적으로 불가능<br>
-        <span class="badge badge-blue">유량 음수·0</span> 물리적으로 불가능<br>
-        <span class="badge badge-blue">센서 고착값</span> 동일 값 장기 반복<br>
-        <span class="badge badge-blue">단위 오기입</span> m³/s → m³/min 혼용
-      </div>
-    </div>
-
-    <div class="inner-section" style="margin-bottom:0">
-      <div class="inner-section-header">수문학 실무 처리 방법 예시</div>
-      <div class="inner-section-body">
-        <div class="method-row">
-          <div class="method-card">
-            <div class="method-title">Rating Curve 추정</div>
-            <div class="method-desc">수위(wl)가 있을 때 수위-유량 관계식으로 유량 역산. 가장 실무적인 방법.</div>
-            <span class="badge badge-green">유량 결측 시</span>
-            <span class="badge badge-green">수위 있을 때</span>
-          </div>
-          <div class="method-card">
-            <div class="method-title">인접 관측소 회귀</div>
-            <div class="method-desc">상·하류 관측소 간 상관관계를 이용해 결측값 추정</div>
-            <span class="badge badge-blue">상관관계 높을 때</span>
-            <span class="badge badge-gray">장기 결측</span>
-          </div>
-          <div class="method-card">
-            <div class="method-title">플래그 후 제외</div>
-            <div class="method-desc">의심값은 플래그 처리 후 분석에서 제외. 원본은 반드시 보존.</div>
-            <span class="badge badge-yellow">불확실할 때</span>
-            <span class="badge badge-green">원본 보존</span>
-          </div>
-        </div>
-      </div>
-    </div>
 
   </div>
 </div>
 
-<!-- 핵심 원칙 -->
-<div class="warn-box warn-gray" style="margin-bottom:0">
-  💡 <strong>핵심 원칙</strong><br>
-  어떤 방법을 쓰든 <strong>추정값임을 반드시 플래그로 표시</strong>해야 합니다.
-  원본값과 추정값을 구분해서 관리하는 것이 실무의 기본입니다.
+
+
+<!-- ─── ⑤ 핵심 원칙 요약 ──────────────────────── -->
+<div class="notice n-gray" style="margin-bottom:1.5rem">
+  💡 <strong>핵심 원칙 요약</strong><br>
+  어떤 방법을 쓰든 <strong>추정값임을 반드시 QC 플래그로 표시</strong>해야 합니다.
+  원본값과 추정값을 구분해서 관리하는 것이 수문 실무의 기본입니다.
+  이상치는 제거가 아닌 <strong>플래그 → 검토 → 최종 판단</strong>의 3단계로 처리합니다.<span class="ref-num" title="WMO No.168, 2008">[1]</span>
+</div>
+
+
+<!-- ─── 참고문헌 ───────────────────────────────── -->
+<div class="sec">
+  <div class="sec-hdr"><span class="num" style="background:#555">R</span> 참고문헌</div>
+  <div class="sec-body">
+    <ul class="ref-list">
+      <li data-n="1">
+        World Meteorological Organization (WMO). (2008). <em>Guide to Hydrological Practices, Volume I: Hydrology – From Measurement to Hydrological Information.</em> WMO-No. 168, 6th ed. Geneva: WMO.<br>
+        <a href="https://library.wmo.int/records/item/35804-guide-to-hydrological-practices-volume-i" target="_blank">🔗 library.wmo.int — WMO No.168 Vol.I (공식 페이지)</a> &nbsp;|&nbsp;
+        <a href="https://unstats.un.org/unsd/envaccounting/waterGuidelines/Material/WMO_Guide_168_Vol_I_en_hydrological_practices.pdf" target="_blank">📄 PDF 직접 다운로드</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← 수문 데이터 품질관리 및 이상치 처리의 국제 표준 지침서</span>
+      </li>
+      <li data-n="2">
+        Beven, K. J. (2012). <em>Rainfall-Runoff Modelling: The Primer</em> (2nd ed.). Wiley-Blackwell. ISBN: 978-0-470-71459-1<br>
+        <a href="https://www.wiley.com/en-us/Rainfall+Runoff+Modelling%3A+The+Primer%2C+2nd+Edition-p-9780470714591" target="_blank">🔗 Wiley 출판사 페이지</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← 강수–유출 메커니즘 및 데이터 물리적 해석 기반</span>
+      </li>
+      <li data-n="3">
+        Vogel, R. M., &amp; Fennessey, N. M. (1994). Flow-duration curves I: New interpretation and confidence intervals. <em>Journal of Water Resources Planning and Management</em>, 120(4), 485–504.<br>
+        <a href="https://ascelibrary.org/doi/10.1061/(ASCE)0733-9496(1994)120:4(485)" target="_blank">🔗 doi: 10.1061/(ASCE)0733-9496(1994)120:4(485)</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← 계절별 유량 분포 특성 및 갈수·홍수기 분리의 필요성</span>
+      </li>
+      <li data-n="4">
+        International Organization for Standardization (ISO). (2010). <em>ISO 1100-2:2010 — Hydrometry: Measurement of liquid flow in open channels — Part 2: Determination of the stage-discharge relationship.</em> Geneva: ISO.<br>
+        <a href="https://www.iso.org/standard/42207.html" target="_blank">🔗 iso.org/standard/42207 (공식 표준 페이지)</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← Rating Curve(수위–유량 관계) 적용 및 데이터 플래그 처리 국제표준</span>
+      </li>
+      <li data-n="5">
+        Rantz, S. E., et al. (1982). <em>Measurement and Computation of Streamflow: Volume 1 – Measurement of Stage and Discharge.</em> USGS Water-Supply Paper 2175. Reston: U.S. Geological Survey.<br>
+        <a href="https://pubs.usgs.gov/publication/wsp2175" target="_blank">🔗 pubs.usgs.gov/wsp2175 (USGS 공식 — 무료 PDF)</a> &nbsp;|&nbsp; doi: <a href="https://doi.org/10.3133/wsp2175" target="_blank">10.3133/wsp2175</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← 연속 수문 관측 센서 고장 판별 및 데이터 품질 검토 방법론 (Flatline·Spike 포함)</span>
+      </li>
+      <li data-n="6">
+        Helsel, D. R., Hirsch, R. M., Ryberg, K. R., Archfield, S. A., &amp; Gilroy, E. J. (2020). <em>Statistical Methods in Water Resources.</em> USGS Techniques and Methods, Book 4, Chapter A3. Reston: USGS.<br>
+        <a href="https://doi.org/10.3133/tm4a3" target="_blank">🔗 doi: 10.3133/tm4a3 (USGS 공식 — 무료 PDF)</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← 수문 데이터 통계 분석, 이상치 탐지 기준 및 계절별 분리 방법론</span>
+      </li>
+      <li data-n="7">
+        Katz, R. W., Parlange, M. B., &amp; Naveau, P. (2002). Statistics of extremes in hydrology. <em>Advances in Water Resources</em>, 25(8–12), 1287–1304.<br>
+        <a href="https://doi.org/10.1016/S0309-1708(02)00056-8" target="_blank">🔗 doi: 10.1016/S0309-1708(02)00056-8</a> &nbsp;|&nbsp;
+        <a href="https://infoscience.epfl.ch/bitstreams/e2dd1303-545c-452d-bb4d-20d77c594153/download" target="_blank">📄 무료 PDF (EPFL)</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← 수문 극값의 GEV·Gumbel 분포 특성, 정규분포 적용의 문제점</span>
+      </li>
+      <li data-n="8">
+        Cleveland, R. B., Cleveland, W. S., McRae, J. E., &amp; Terpenning, I. (1990). STL: A seasonal-trend decomposition procedure based on loess. <em>Journal of Official Statistics</em>, 6(1), 3–73.<br>
+        <a href="https://www.scienceopen.com/document?vid=be074647-46c0-4ba9-991e-3124fbf63ed1" target="_blank">🔗 ScienceOpen 원문 페이지</a> &nbsp;|&nbsp;
+        <a href="https://www.math.unm.edu/~lil/Stat581/STL.pdf" target="_blank">📄 무료 PDF (UNM)</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← STL 분해 방법론, 수문 시계열 이상치 탐지에 광범위하게 활용</span>
+      </li>
+      <li data-n="9">
+        Maidment, D. R. (Ed.). (1993). <em>Handbook of Hydrology.</em> McGraw-Hill. ISBN: 978-0-07-039732-3<br>
+        <a href="https://www.accessengineeringlibrary.com/content/book/9780070397323" target="_blank">🔗 McGraw-Hill Access Engineering (기관 접속)</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← 공간적 교차 검증, 인접 관측소 회귀 보간 및 수문 GIS 방법론</span>
+      </li>
+      <li data-n="10">
+        환경부·한국수자원공사. (2019). <em>수문조사 업무규정 및 표준지침.</em> 대전: K-water.<br>
+        <a href="https://www.kwater.or.kr" target="_blank">🔗 K-water 공식 사이트</a> &nbsp;|&nbsp;
+        <a href="https://www.water.or.kr/hydrologyNew/report/reportList.do" target="_blank">🔗 수문조사연보 (국가수자원관리종합정보시스템)</a>
+        <span style="display:block;font-size:11px;margin-top:3px;color:#888">← 국내 수문 데이터 품질관리 실무 기준, Few-shot 판단 예시 출처</span>
+      </li>
+    </ul>
+  </div>
 </div>
 
 <script>
+  // ── 보간 토글 ──
+  let activeInterp = 'time';
+
+  function toggleInterp(type) {
+    const cards = document.querySelectorAll('#interp-cards .method-card');
+    const names = ['linear', 'spline', 'time'];
+    cards.forEach((c, i) => c.classList.toggle('active', names[i] === type));
+
+    if (type === 'time') {
+      const box = document.getElementById('explainer-time');
+      const isShow = box.classList.contains('show');
+      box.classList.toggle('show', !isShow);
+      if (!isShow) activeInterp = 'time';
+    } else {
+      document.getElementById('explainer-time').classList.remove('show');
+    }
+  }
+
+  // ── 스텝 내비게이션 ──
   let currentStep = 0;
 
   function goStep(n) {
     document.getElementById('step-' + currentStep).classList.remove('show');
     document.querySelectorAll('.dot')[currentStep].classList.remove('active');
     currentStep = n;
-    document.getElementById('step-' + currentStep).classList.add('show');
-    document.querySelectorAll('.dot')[currentStep].classList.add('active');
-  }
-
-  function toggleExplainer(type) {
-    if (type === 'time') {
-      const box  = document.getElementById('explainer-time');
-      const card = document.getElementById('card-time');
-      const isShow = box.classList.contains('show');
-      box.classList.toggle('show', !isShow);
-      card.classList.toggle('active', !isShow);
-    }
+    document.getElementById('step-' + n).classList.add('show');
+    document.querySelectorAll('.dot')[n].classList.add('active');
   }
 </script>
 
